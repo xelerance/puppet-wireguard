@@ -2,7 +2,10 @@
 define wireguard::peer (
   Array[String]    $allowedips,
   String           $iface               = $title,
-  Optional[String] $publickey           = $::wireguard[$iface],
+  Optional[String] $publickey           = $facts['wireguard'] ? {
+    undef   => undef,
+    default => $facts['wireguard'][$iface],
+  },
   Optional[String] $presharedkey        = undef,
   Optional[String] $endpoint            = undef,
   Integer[0,65535] $persistentkeepalive = 0, # 0 == off
@@ -13,7 +16,7 @@ define wireguard::peer (
   # as it will likely be there the next time
   if $publickey {
     $template_params = {
-      'publickey'           => $::wireguard[$iface],
+      'publickey'           => $facts['wireguard'][$iface],
       'allowedips'          => $allowedips,
       'endpoint'            => $endpoint,
       'persistentkeepalive' => $persistentkeepalive,
