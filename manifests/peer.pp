@@ -48,23 +48,26 @@ define wireguard::peer (
       tag     => ['wireguard-peer', $tunnelgroup],
     }
 
-    # [Route]
-    $route = inline_epp(@(EOT), $template_params)
+    # routes are only meaningful if there are multiple allowedips (Destination=)
+    if length($allowedips) > 1 {
+      # [Route]
+      $route = inline_epp(@(EOT), $template_params)
 
-    [Route]
-    Gateway=<%= $allowedips[0] %>
-    <% $allowedips.each |Integer $index, String $ip| {
-         # skip self (first allowedips)
-         if $index == 0 { next() } -%>
-    Destination=<%= $ip %>
-    <% } -%>
-    | EOT
+      [Route]
+      Gateway=<%= $allowedips[0] %>
+      <% $allowedips.each |Integer $index, String $ip| {
+           # skip self (first allowedips)
+           if $index == 0 { next() } -%>
+      Destination=<%= $ip %>
+      <% } -%>
+      | EOT
 
-    @@concat::fragment{ "[Route]-${::fqdn}-${iface}":
-      order   => '10',
-      content => $route,
-      target  => "${iface}.network",
-      tag     => ['wireguard-peer', $tunnelgroup],
+      @@concat::fragment{ "[Route]-${::fqdn}-${iface}":
+        order   => '10',
+        content => $route,
+        target  => "${iface}.network",
+        tag     => ['wireguard-peer', $tunnelgroup],
+      }
     }
   } else {
     notice("wireguard::peer: no publickey was provided nor collected from the wireguard[${iface}] fact")
