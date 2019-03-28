@@ -26,6 +26,7 @@ define wireguard::peer (
     $wireguardpeer = inline_epp(@(EOT), $template_params)
 
     [WireGuardPeer]
+    # peer: <%= $::fqdn %>
     PublicKey=<%= $publickey %>
     <% if $presharedkey { -%>
     PresharedKey=<%= $presharedkey %>
@@ -54,6 +55,7 @@ define wireguard::peer (
       $route = inline_epp(@(EOT), $template_params)
 
       [Route]
+      # peer: <%= $::fqdn %>
       Gateway=<%= $allowedips[0] %>
       <% $allowedips.each |Integer $index, String $ip| {
            # skip self (first allowedips)
