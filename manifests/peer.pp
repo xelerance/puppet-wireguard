@@ -10,6 +10,7 @@ define wireguard::peer (
   Optional[String] $endpoint            = undef,
   Integer[0,65535] $persistentkeepalive = 0, # 0 == off
   Optional[String] $tunnelgroup         = undef,
+  String           $peername            = $::fqdn,
 ) {
   # the publickey is not optional despite the parameter specification
   # saying otherwise but we don't want to fail a run if it's not there
@@ -26,7 +27,9 @@ define wireguard::peer (
     $wireguardpeer = inline_epp(@(EOT), $template_params)
 
     [WireGuardPeer]
-    # peer: <%= $::fqdn %>
+    <% if length($peername) > 0 { -%>
+    # peer: <%= $peername %>
+    <% } -%>
     PublicKey=<%= $publickey %>
     <% if $presharedkey { -%>
     PresharedKey=<%= $presharedkey %>
@@ -55,7 +58,9 @@ define wireguard::peer (
       $route = inline_epp(@(EOT), $template_params)
 
       [Route]
-      # peer: <%= $::fqdn %>
+      <% if length($peername) > 0 { -%>
+      # peer: <%= $peername %>
+      <% } -%>
       Gateway=<%= $allowedips[0] %>
       <% $allowedips.each |Integer $index, String $ip| {
            # skip self (first allowedips)
