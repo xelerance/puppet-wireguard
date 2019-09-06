@@ -16,7 +16,7 @@ define wireguard::peer (
   # as it will likely be there the next time
   if $publickey {
     $template_params = {
-      'publickey'           => $facts['wireguard'][$iface],
+      'publickey'           => $publickey,
       'allowedips'          => $allowedips,
       'endpoint'            => $endpoint,
       'persistentkeepalive' => $persistentkeepalive,
@@ -42,7 +42,7 @@ define wireguard::peer (
     <% } -%>
     | EOT
 
-    @@concat::fragment{ "[WireGuardPeer]-${::fqdn}-${iface}":
+    @@concat::fragment{ "[WireGuardPeer]-${::fqdn}-${iface}-${publickey}":
       order   => '10',
       content => $wireguardpeer,
       target  => "${iface}.netdev",
