@@ -9,7 +9,7 @@ define wireguard::peer (
   Optional[String] $presharedkey        = undef,
   Optional[String] $endpoint            = undef,
   Integer[0,65535] $persistentkeepalive = 0, # 0 == off
-  Optional[String] $tunnelgroup         = undef,
+  Array[String]    $export_tags         = [],
   String           $peername            = $::fqdn,
 ) {
   # the publickey is not optional despite the parameter specification
@@ -49,7 +49,7 @@ define wireguard::peer (
       order   => '10',
       content => $wireguardpeer,
       target  => "${iface}.netdev",
-      tag     => ['wireguard-peer', $tunnelgroup],
+      tag     => $export_tags,
     }
 
     # routes are only meaningful if there are multiple allowedips (Destination=)
@@ -73,7 +73,7 @@ define wireguard::peer (
         order   => '10',
         content => $route,
         target  => "${iface}.network",
-        tag     => ['wireguard-peer', $tunnelgroup],
+        tag     => $export_tags,
       }
     }
   } else {

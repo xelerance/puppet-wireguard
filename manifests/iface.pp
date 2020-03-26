@@ -1,10 +1,10 @@
 #
 define wireguard::iface (
   Array[Stdlib::IP::Address] $addresses,
-  String                     $iface       = $title,
-  Optional[Integer[1,65535]] $listenport  = undef,
-  Optional[String]           $fwmark      = undef,
-  Optional[String]           $tunnelgroup = undef,
+  String                     $iface        = $title,
+  Optional[Integer[1,65535]] $listenport   = undef,
+  Optional[String]           $fwmark       = undef,
+  Array[String]              $collect_tags = [],
 ) {
   # create a key pair for $iface
   exec { "wg genkey for ${iface}":
@@ -80,14 +80,11 @@ define wireguard::iface (
   }
 
   # [WireGuardPeer]
-  # collect all *other* peers
+  # collect all *other* peers with the tags we are interested in
   # Note: filtering *out* based on members in the tags array doesn't work
-  if $tunnelgroup {
-    Concat::Fragment <<| tag == 'wireguard-peer' and target == "${iface}.netdev" and title != "[WireGuardPeer]-${::fqdn}-${iface}" and tag == $tunnelgroup |>>
-  } else {
-    Concat::Fragment <<| tag == 'wireguard-peer' and target == "${iface}.netdev" and title != "[WireGuardPeer]-${::fqdn}-${iface}" |>>
+  $collect_tags.each | String $t | {
+    Concat::Fragment <<| tag == 'wireguard::peer' and tag == $t and target == "${iface}.netdev" and title != "[WireGuardPeer]-${::fqdn}-${iface}" |>>
   }
-
 
   # cobble up a systemd.netdev file
   concat { "${iface}.network":
@@ -112,12 +109,10 @@ define wireguard::iface (
   }
 
   # [Route]
-  # collect all *other* peers' routes
+  # collect all *other* peers' routes with the tags we are interested in
   # Note: filtering *out* based on members in the tags array doesn't work
-  if $tunnelgroup {
-    Concat::Fragment <<| tag == 'wireguard-peer' and target == "${iface}.network" and title != "[Route]-${::fqdn}-${iface}" and tag == $tunnelgroup |>>
-  } else {
-    Concat::Fragment <<| tag == 'wireguard-peer' and target == "${iface}.network" and title != "[Route]-${::fqdn}-${iface}" |>>
+  $collect_tags.each | String $t | {
+    Concat::Fragment <<| tag == 'wireguard::peer' and tag == $t and target == "${iface}.network" and title != "[Route]-${::fqdn}-${iface}" |>>
   }
 
   # systemd-networkd integration
