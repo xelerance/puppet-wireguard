@@ -10,7 +10,10 @@ class wireguard (
       require => Apt::Ppa[$ppa],
     }
   } else {
-    package { 'wireguard': }
+    # avoids pulling in wireguard-dkms
+    package { 'wireguard-tools':
+      install_options => ['--no-install-recommends'],
+    }
   }
 
   # apply systemd::network changes even if $systemd::manage_networkd is false
