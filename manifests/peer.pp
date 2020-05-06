@@ -45,7 +45,7 @@ define wireguard::peer (
     <% } -%>
     | EOT
 
-    @@concat::fragment{ "[WireGuardPeer]-${::fqdn}-${iface}-${publickey}":
+    @@concat::fragment{ "[WireGuardPeer]-${::fqdn}-${iface}":
       order   => '10',
       content => $wireguardpeer,
       target  => "${iface}.netdev",
