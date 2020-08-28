@@ -2,7 +2,9 @@
 define wireguard::peer (
   Array[String]    $allowedips,
   String           $iface               = $title,
-  Optional[String] $publickey           = $facts['wireguard'] ? {
+  Optional[
+    Pattern[/[A-Za-z0-9+\/=]{44}/]
+  ]                $publickey           = $facts['wireguard'] ? {
     undef   => undef,
     default => $facts['wireguard'][$iface],
   },
