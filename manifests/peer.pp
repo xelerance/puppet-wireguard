@@ -1,6 +1,6 @@
 #
 define wireguard::peer (
- Array[String]     $allowedips,
+  Array[String]     $allowedips,
   String            $iface                 = $title,
   Optional[
     Pattern[/[A-Za-z0-9+\/=]{44}/]
@@ -55,7 +55,7 @@ define wireguard::peer (
       tag     => $export_tags,
     }
 
-   if $routes_depend_on_peer {
+    if $routes_depend_on_peer {
       # routes are only meaningful if there are multiple allowedips (Destination=)
       if length($allowedips) > 1 {
         # [Route]
