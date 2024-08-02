@@ -3,6 +3,7 @@ define wireguard::iface (
   Array[Stdlib::IP::Address] $addresses,
   String                     $iface        = $title,
   Optional[Integer[1,65535]] $listenport   = undef,
+  Optional[Integer[1,9000]]  $mtu          = undef,
   Optional[String]           $fwmark       = undef,
   Array[String]              $collect_tags = [],
 ) {
@@ -39,6 +40,7 @@ define wireguard::iface (
   $netdev_template_params = {
     'iface'      => $iface,
     'listenport' => $listenport,
+    'MTU'        => $mtu,
     'fwmark'     => $fwmark,
   }
   $netdev = inline_epp(@(EOT), $netdev_template_params)
@@ -54,7 +56,7 @@ define wireguard::iface (
   }
 
   # [WireGuard]
-  $wireguard = inline_epp(@(EOT), { 'listenport' => $listenport, 'fwmark' => $fwmark })
+  $wireguard = inline_epp(@(EOT), { 'listenport' => $listenport, 'MTU' => $mtu, 'fwmark' => $fwmark })
 
   [WireGuard]
   <% if $listenport { -%>
@@ -62,6 +64,9 @@ define wireguard::iface (
   <% } -%>
   <% if $fwmark { -%>
   FwMark=<%= $fwmark %>
+  <% } -%>
+  <% if $mtu { -%>
+  MTU=<%= $mtu %>
   <% } -%>
   PrivateKey=
   |-EOT
