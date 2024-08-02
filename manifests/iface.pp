@@ -3,9 +3,23 @@ define wireguard::iface (
   Array[Stdlib::IP::Address] $addresses,
   String                     $iface        = $title,
   Optional[Integer[1,65535]] $listenport   = undef,
+  Optional[Integer[1,9000]]  $mtu          = undef,
   Optional[String]           $fwmark       = undef,
   Array[String]              $collect_tags = [],
 ) {
+  $netdev_template_params = {
+    'iface' => $iface,
+  }
+  $network_template_params = {
+    'addresses' => $addresses,
+    'iface'     => $iface,
+  }
+  $wireguard_template_params = {
+    'fwmark'     => $fwmark,
+    'listenport' => $listenport,
+    'mtu'        => $mtu,
+  }
+
   # create a key pair for $iface
   exec { "wg genkey for ${iface}":
     command  => "wg genkey > ${iface}.key && rm -f ${iface}.pub",
@@ -36,11 +50,6 @@ define wireguard::iface (
   }
 
   # [NetDev]
-  $netdev_template_params = {
-    'iface'      => $iface,
-    'listenport' => $listenport,
-    'fwmark'     => $fwmark,
-  }
   $netdev = inline_epp(@(EOT), $netdev_template_params)
 
   [NetDev]
@@ -54,7 +63,7 @@ define wireguard::iface (
   }
 
   # [WireGuard]
-  $wireguard = inline_epp(@(EOT), { 'listenport' => $listenport, 'fwmark' => $fwmark })
+  $wireguard = inline_epp(@(EOT), $wireguard_template_params)
 
   [WireGuard]
   <% if $listenport { -%>
@@ -62,6 +71,9 @@ define wireguard::iface (
   <% } -%>
   <% if $fwmark { -%>
   FwMark=<%= $fwmark %>
+  <% } -%>
+  <% if $mtu { -%>
+  MTU=<%= $mtu %>
   <% } -%>
   PrivateKey=
   |-EOT
@@ -93,7 +105,7 @@ define wireguard::iface (
   }
 
   # [Network]
-  $network = inline_epp(@(EOT), { iface => $iface, addresses => $addresses, })
+  $network = inline_epp(@(EOT), $network_template_params)
   [Match]
   Name=<%= $iface %>
 
